@@ -6,6 +6,8 @@ import org.apache.hadoop.hbase.client.*;
 
 /**
  * Created by 01110635 on 2016/5/16.
+ * 电子发票测试用例（hbase存放pdf文件）
+ * pdf以二进制读写到hbase
  */
 public class HbaseTest {
 
@@ -35,18 +37,8 @@ public class HbaseTest {
         putData(conf,"56789",cont);*/
     /*    byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\a.pdf");
         putByteData(conf, "pdf002", data);*/
-        byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\bbb.pdf");
-        putByteData(conf, "pdf010", data);
-      /*  long begintime = System.currentTimeMillis();
-        System.out.println("begin time"+begintime);
-        byte[] data = getData(conf, "pdf002");
 
-        System.out.println("len:" + data.length);
-        PdfReader.write(data, "C:\\Users\\Public\\Desktop\\bbb.pdf");
-
-        long endtime = System.currentTimeMillis();
-        System.out.println("end time"+endtime);
-        System.out.println(" time:"+(endtime-begintime)/1000);
+      /*
 */
         /* byte[] data = getData(conf,"56789");
          System.out.print(new String(data));*/
@@ -71,7 +63,31 @@ public class HbaseTest {
 
     }
 
+    /**
+     * @throws Exception
+     * 从hbase读取图片（读取到解析写入桌面花费3秒）
+     */
+    public static void readPDFFromHbase()throws Exception{
+        long begintime = System.currentTimeMillis();
+        System.out.println("begin time"+begintime);
+        byte[] data = getData(conf, "pdf002");
 
+        System.out.println("len:" + data.length);
+        PdfReader.write(data, "C:\\Users\\Public\\Desktop\\bbb.pdf");
+
+        long endtime = System.currentTimeMillis();
+        System.out.println("end time"+endtime);
+        System.out.println(" time:"+(endtime-begintime)/1000);
+    }
+
+    /**
+     * @throws Exception
+     * 去读PDF写入hbase
+     */
+    public static void writePDFToHBase() throws Exception{
+        byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\bbb.pdf");
+        putByteData(conf, "pdf010", data);
+    }
 
     public static void createTableOfUser(String tablename,String[] familys) throws  Exception{
         HBaseAdmin hBaseAdmin = new HBaseAdmin(conf);
@@ -86,6 +102,13 @@ public class HbaseTest {
         }
     }
 
+    /**
+     * 这种方式存放二进制会有问题，String类型对长度有限制
+     * @param config
+     * @param rowkey
+     * @param data
+     * @throws Exception
+     */
     public static void putData(Configuration config,String rowkey,String data) throws  Exception{
         Connection conn = ConnectionFactory.createConnection(config);
         HTable table = (HTable)conn.getTable(TableName.valueOf("paper".getBytes()));
@@ -110,6 +133,7 @@ public class HbaseTest {
         Connection conn = ConnectionFactory.createConnection(config);
         HTable table = (HTable)conn.getTable(TableName.valueOf("paper".getBytes()));
         Put put = new Put(rowkey.getBytes());
+        //data String存放二进制文件有长度限制（pdf）
         put.addColumn("cf".getBytes(), "pdf".getBytes(), data);
         table.put(put);
         table.close();
