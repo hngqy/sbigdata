@@ -1,0 +1,2 @@
+1.测试Hbase
+  HbaseTest类，测试hbase对pdf文件存取

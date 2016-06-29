@@ -1,5 +1,6 @@
 package com.sf.hbase;
 
+import com.sf.utils.ByteCompress;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
@@ -28,50 +29,19 @@ public class HbaseTest {
     }
 
     public static void runjob(String[] args) throws Exception {
-        //create table
-
-//        createTableOfUser("test",new String[]{"cf"});
-    /*    StripPDFContent pdf = new StripPDFContent();
-        File file=new File("C:\\Users\\Public\\Desktop\\a.pdf");
-        String cont=pdf.getText(file);
-        putData(conf,"56789",cont);*/
-    /*    byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\a.pdf");
-        putByteData(conf, "pdf002", data);*/
-
-      /*
-*/
-        /* byte[] data = getData(conf,"56789");
-         System.out.print(new String(data));*/
-//        byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\a.pdf");
-//        byte[] data = PdfReader.readFile("E:\\images\\a.pptx");
-//        putByteData(conf,"ppt01",data);
-//        putData(conf,"ppt",new String(data));
-       /* byte[] data = getData(conf,"ppt01");
-
-        System.out.println("len:" + data.length);
-        PdfReader.write(data,"E:\\images\\b.pptx");
-
-        System.out.println("====");
-        for (int i = 0; i <1000 ; i++) {
-            System.out.print(data[i] + " ");
-            if(i % 10 == 0){
-                System.out.println("");
-            }
-        }*/
-
-
-
+//        writeCompressPDFToHBase("pdf012");
+        readUnCompressPDFFromHbase("pdf012");
     }
 
     /**
      * @throws Exception
      * 从hbase读取图片（读取到解析写入桌面花费3秒）
      */
-    public static void readPDFFromHbase()throws Exception{
+    public static void readPDFFromHbase(String rowkey)throws Exception{
         long begintime = System.currentTimeMillis();
         System.out.println("begin time"+begintime);
-        byte[] data = getData(conf, "pdf002");
-
+//        byte[] data = getData(conf, "pdf002");
+        byte[] data = getData(conf, rowkey);
         System.out.println("len:" + data.length);
         PdfReader.write(data, "C:\\Users\\Public\\Desktop\\bbb.pdf");
 
@@ -82,12 +52,45 @@ public class HbaseTest {
 
     /**
      * @throws Exception
+     * 从hbase读取图片（读取到解析写入桌面花费3秒）
+     */
+    public static void readUnCompressPDFFromHbase(String rowkey)throws Exception{
+        long begintime = System.currentTimeMillis();
+        System.out.println("begin time"+begintime);
+//        byte[] data = getData(conf, "pdf002");
+        byte[] data = getData(conf, rowkey);
+        byte[] unCompressData = ByteCompress.unBZip2(data);
+        System.out.println("len:"+data.length+"uncompress len:" + unCompressData.length);
+        PdfReader.write(unCompressData, "C:\\Users\\Public\\Desktop\\cccc.pdf");
+
+        long endtime = System.currentTimeMillis();
+        System.out.println("end time"+endtime);
+        System.out.println(" time:"+(endtime-begintime)/1000);
+    }
+
+    /**
+     * @throws Exception
      * 去读PDF写入hbase
      */
-    public static void writePDFToHBase() throws Exception{
+    public static void writePDFToHBase(String rowkey) throws Exception{
         byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\bbb.pdf");
-        putByteData(conf, "pdf010", data);
+//        putByteData(conf, "pdf010", data);
+        putByteData(conf, rowkey, data);
     }
+
+    /**
+     * @throws Exception
+     * 压缩去读PDF写入hbase
+     */
+    public static void writeCompressPDFToHBase(String rowkey) throws Exception{
+        byte[] data = PdfReader.readFile("C:\\Users\\Public\\Desktop\\bbb.pdf");
+//        putByteData(conf, "pdf010", data);
+        byte[] compressByteData = ByteCompress.bZip2(data);
+        System.out.println("byte[] len:"+data.length+"  compress len:"+compressByteData.length);
+//        byte[] toHexData=ByteCompress.bytesToHexString(compressByteData);
+        putByteData(conf, rowkey, compressByteData);
+    }
+
 
     public static void createTableOfUser(String tablename,String[] familys) throws  Exception{
         HBaseAdmin hBaseAdmin = new HBaseAdmin(conf);
@@ -139,5 +142,4 @@ public class HbaseTest {
         table.close();
         conn.close();
     }
-
 }

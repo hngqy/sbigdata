@@ -25,10 +25,8 @@ public class PdfReader {
 
     public static  byte[] readFile(String file)throws  Exception{
         FileInputStream fis = new FileInputStream(new File(file));
-        System.out.print(fis.available());
         byte[] data = new byte[] {};
         data = inputStreamToByte(fis);
-        System.out.print(data.length);
         /*for (byte a:data){
             System.out.print(a);
         }*/
